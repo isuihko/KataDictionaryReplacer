@@ -1,0 +1,15 @@
+#
+# Same key twice
+#
+
+# At first the given dictionary
+dict ["temp", "temporary"]
+dict ["name", "John Doe"]
+
+# Next one is "temp" again with different value
+# to check that only the first definition counts.
+"temp", "TEMPORARY"
+
+# some misc key,value pairs
+"house", "parliament"
+"House", "White House"

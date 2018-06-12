@@ -1,0 +1,114 @@
+Sun Jan  1 15:23:18 EET 2017
+
+TEST 1
+Usage: kdr [-dN] dictionaryfile
+  Dictionaryfile contains rows of "key","value" pairs.
+  Program asks an input text string which contains $key$ strings,
+  which are replaced by value strings found from the dictionaryfile.
+  Example of input:  My name is $name$. If dictionary has a row "name","John Doe",
+  then the output is My name is John Doe.
+  Optional -dN sets debug level 0-5, default 0 (no debug), e.g. -d2 shows dictionary.
+  Compiled with MAX_DICT_KEYS=100 and MAX_OUTPUT_STRING=128.
+
+TEST 2
+Error opening file 'sanakirja' (errno 2)
+
+TEST 3a
+Format error in line 10: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+
+TEST 3b
+Format error in line 5: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+
+TEST 3c
+format error: needs a comma between key and value
+Format error in line 5: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+
+TEST 3d
+Duplicate found for key '$temp$' (already 'temporary'). Ignore value 'TEMPORARY' in line 11.
+temporary name John Doe
+
+TEST 4a
+Input : $temp$ here comes the name $name$
+Output: $temp$ here comes the name $name$
+
+TEST 4b
+Input : 
+Output: 
+
+TEST 4c
+Input : kjdf askZ$$$1412
+Output: kjdf askZ$$$1412
+
+TEST 4d
+>build_dictionary_data(file 'dict_empty.txt')
+>build_dictionary_data status 0, keys read 0
+Input : $temp$
+Output: $temp$
+
+TEST 5a
+Input : $temp$ here comes the name $name$
+Output: temporary here comes the name John Doe
+
+TEST 5b
+Input : And here are many short keys to fill output buffer. $x$ $Y$ 1 $x$ $Y$ 2 $x$ $Y$ 3 $x$ $Y$ 4 $x$ $Y$ 5 Some text.
+
+Output buffer exceeded (2)
+MAX OUTPUT BUFFER SIZE REACHED (127), ignored rest ($x$ $Y$ 2 $x$ $Y$ 3 $x$ $Y$ 4 $x$ $Y$ 5 Some text.
+)
+
+Partially successful.
+Output: And here are many short keys to fill output buffer. this key has long definition ALSO THIS HAS LONG DEFINITION 1 
+
+TEST 5c
+Input : Text with $name_of_the_key_is_long$. And $Another long key$. How it went?
+Output: Text with short. And value. How it went?
+
+TEST 5d
+Input : This $house$ is not same as this another $House$.
+Output: This parliament is not same as this another White House.
+
+TEST 5e
+Input : Price was $$50$.
+Output: Price was today only 50 dollars.
+
+Input : How about this? $price is $50$
+Output: How about this? the price of the product is 50 dollars
+
+TEST 5f
+Input : $ou$ $ou$to$ works as expected.
+Output: Sana 'ou' there was an dollar inside works as expected.
+
+Input : But here keys are not separated $3210$ and $3210$0123$ but it was expected.
+Output: But here keys are not separated countdown and countdown0123$ but it was expected.
+
+TEST 5g
+Input : Empty key $$ is expanded. More $$ and $$.
+Output: Empty key an empty key is expanded. More an empty key and an empty key.
+
+TEST 5h
+Empty input string, OK, exit.
+
+TEST 6
+ 0: '$temp$','temporary'
+ 1: '$name$','John Doe'
+ 2: '$house$','parliament'
+ 3: '$House$','White House'
+ 4: '$x$','this key has long definition'
+ 5: '$Y$','ALSO THIS HAS LONG DEFINITION'
+ 6: '$name_of_the_key_is_long$','short'
+ 7: '$Another long key$','value'
+ 8: '$dollar$','$'
+ 9: '$ou$to$','there was an dollar inside'
+10: '$ou$','Sana 'ou''
+11: '$3210$','countdown'
+12: '$3210$0123$','down and up'
+13: '$price is $50$','the price of the product is 50 dollars'
+14: '$price$','$20'
+15: '$$50$','today only 50 dollars'
+16: '$$','an empty key'
+17: '$goals$',''
+Input : $price$
+Output: $20

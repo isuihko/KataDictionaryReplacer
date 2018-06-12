@@ -1,0 +1,9 @@
+#
+# This is an empty dictionary file.
+#
+
+# Only comments and empty lines.
+# So the software just prints the same line it had read without processing it.
+# You can confirm that with debug levels -d3, -d4 and -d5.
+
+# END

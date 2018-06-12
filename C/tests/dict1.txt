@@ -1,0 +1,52 @@
+#
+# Kata DictionaryReplacer -testausmateriaalia, sanakirja
+#
+# Ismo Suihko, 2017-01-01
+#
+# Lines # start a comment.
+# Comments can be after the key,value pair
+#
+# There must be a comma after "key"
+# and both key and value must be surrounded by double quotation marks
+# e.g. "name", "John Doe"
+#
+
+# At first the given dictionary
+dict ["temp", "temporary"]
+dict ["name", "John Doe"]
+
+# More key,value pairs
+"house", "parliament"
+"House", "White House"
+
+# Long value - for testing what happens if output buffer is full
+"x","this key has long definition"
+"Y","ALSO THIS HAS LONG DEFINITION"
+
+# long key, short value
+"name_of_the_key_is_long","short"
+"Another long key","value"
+
+#
+# Test different combinations with $
+#
+"dollar", "$"        Then $dollar$ expands as $
+
+# both of keys start with "ou", define the one with $ first!
+"ou$to", "there was an dollar inside"
+"ou", "Sana 'ou'"
+
+# if order was different, longer key will be ignored, e.g.
+"3210", "countdown"
+"3210$0123", "down and up"
+
+"price is $50", "the price of the product is 50 dollars"
+
+dict ["price", "$20"]
+dict ["$50", "today only 50 dollars"]
+
+# empty key
+dict ["", "an empty key"]
+
+# empty value
+dict ["goals",""]

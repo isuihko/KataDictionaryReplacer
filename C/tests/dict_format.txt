@@ -1,0 +1,6 @@
+#
+# " is missing from value definition -> error
+#
+"temp", "temporary"
+"name", John Doe"
+"house", "parlamenttitalo"

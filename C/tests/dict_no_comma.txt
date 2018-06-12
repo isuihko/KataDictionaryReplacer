@@ -1,0 +1,6 @@
+#
+# Comma is missing -> error message
+#
+"temp", "temporary"
+"name" "John Doe"
+"house", "parlamenttitalo"

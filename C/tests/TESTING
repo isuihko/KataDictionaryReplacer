@@ -1,0 +1,363 @@
+TEST REPORT  (draft)
+===========
+
+
+Tested by:   Ismo Suihko
+Date:        2017-01-01
+Environment: Fedora Linux
+Result:      OK
+
+
+Compile sources to binary kdr
+
+$ make
+gcc -c -o kdr_main.o kdr_main.c
+gcc -c -o kdr_build_dictionary.o kdr_build_dictionary.c
+gcc -c -o kdr_process_input.o kdr_process_input.c
+gcc -o kdr kdr_main.o kdr_build_dictionary.o kdr_process_input.o
+$ 
+
+
+
+Used these dictionary test files, which are in tests directory.
+
+dict1.txt		- many key,value pairs 
+dict_duplicate.txt	- duplicate key
+dict_empty.txt		- empty, no keys
+dict_format.txt		- format error, quatation mark missing
+dict_no_comma.txt	- comma missing between key and value
+
+
+
+TEST 1. No parameters   OK
+     ================
+
+$ kdr
+Usage: kdr [-dN] dictionaryfile
+  Dictionaryfile contains rows of "key","value" pairs.
+  Program asks an input text string which contains $key$ strings,
+  which are replaced by value strings found from the dictionaryfile.
+  Example of input:  My name is $name$. If dictionary has a row "name","John Doe",
+  then the output is My name is John Doe.
+  Optional -dN sets debug level 0-5, default 0 (no debug), e.g. -d2 shows dictionary.
+  Compiled with MAX_DICT_KEYS=100 and MAX_OUTPUT_STRING=128.
+$
+
+
+
+TEST 2. File missing   -> error message  OK
+     ===============
+
+$ kdr sanakirja
+Error opening file 'sanakirja' (errno 2)
+$
+
+
+
+TEST 3. Wrong format in a file   -> error message  OK
+     =========================
+
+TEST 3a) Test e.g. with Makefile   OK.
+      With comments in the beginning # it can go up to line 10.
+
+$ kdr Makefile
+Format error in line 10: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+$
+
+
+TEST 3b) Quatation marks illegally, should be "key,"value"  -> error message  OK
+
+------------
+$ cat dict_format.txt
+#
+# " is missing from value definition -> error
+#
+"temp", "temporary"
+"name", John Doe"
+"house", "parlamenttitalo"
+------------
+
+$ kdr dict_format.txt
+Format error in line 5: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+$
+
+
+TEST 3c) Comma after key is missing.   -> error message  OK
+
+------------
+$$ cat dict_no_comma.txt
+#
+# Comma is missing -> error message
+#
+"temp", "temporary"
+"name" "John Doe"
+"house", "parlamenttitalo"
+------------
+
+
+$ kdr dict_no_comma.txt
+format error: needs a comma between key and value
+Format error in line 5: should be "key","value" in each line.
+Only empty lines and lines starting with # are ignored
+$
+
+
+TEST 3d) Same key twice in a file  -> error message  OK
+          Continues and uses the 1st definition.
+
+------------
+$ cat dict_duplicate.txt
+#
+# Same key twice
+#
+
+# At first the given dictionary
+dict ["temp", "temporary"]
+dict ["name", "John Doe"]
+
+# Next one is "temp" again with different value
+# to check that only the first definition counts.
+"temp", "TEMPORARY"
+
+# some misc key,value pairs
+"house", "parliament"
+"House", "White House"
+------------
+
+$ kdr dict_duplicate.txt
+Duplicate found for key '$temp$' (already 'temporary'). Ignore value 'TEMPORARY' in line 11.
+$temp$ name $name$
+temporary name John Doe
+$
+
+
+
+TEST 4. File without key,value pairs (dict_empty.txt) -> no conversions  OK
+     ===============================
+
+------------
+$ cat dict_empty.txt
+#
+# This is an empty dictionary file.
+#
+
+# Only comments and empty lines.
+# So the software just prints the same line it had read without processing it.
+# You can confirm that with debug levels -d3, -d4 and -d5.
+
+# END
+------------
+
+
+TEST 4a) Test with "$temp$ here comes the name $name$".  -> No conversions   OK
+
+$ kdr dict_empty.txt
+$temp$ here comes the name $name$
+$temp$ here comes the name $name$
+$
+
+
+TEST 4b) Push just enter, prints empty.
+
+$ kdr dict_empty.txt
+
+
+$
+
+
+TEST 4c) Enter anything.  -> No conversions   OK
+
+$ kdr dict_empty.txt
+kjdf askZ$$$1412
+kjdf askZ$$$1412
+$
+
+
+TEST 4d) Test with debug logs (-d3, -d4 tai -d5) that there really wasn't dictionary.   OK
+
+$ kdr -d3 dict_empty.txt
+>build_dictionary_data(file 'dict_empty.txt')
+>build_dictionary_data status 0, keys read 0
+$temp$
+Input : $temp$
+Output: $temp$
+$
+
+
+
+TEST 5. Read file with many key,value pairs (dict1.txt)         OK
+     ==================================================
+
+------------
+$ cat dict1.txt
+#
+# Kata DictionaryReplacer -testausmateriaalia, sanakirja
+#
+# Ismo Suihko, 2017-01-01
+#
+# Lines # start a comment.
+# Comments can be after the key,value pair
+#
+# There must be a comma after "key"
+# and both key and value must be surrounded by double quotation marks
+# e.g. "name", "John Doe"
+#
+
+# At first the given dictionary
+dict ["temp", "temporary"]
+dict ["name", "John Doe"]
+
+# More key,value pairs
+"house", "parliament"
+"House", "White House"
+
+# Long value - for testing what happens if output buffer is full
+"x","this key has long definition"
+"Y","ALSO THIS HAS LONG DEFINITION"
+
+# long key, short value
+"name_of_the_key_is_long","short"
+"Another long key","value"
+
+#
+# Test different combinations with $
+#
+"dollar", "$"        Then $dollar$ expands as $
+
+# both of keys start with "ou", define the one with $ first!
+"ou$to", "there was an dollar inside"
+"ou", "Sana 'ou'"
+
+# if order was different, longer key will be ignored, e.g.
+"3210", "countdown"
+"3210$0123", "down and up"
+
+"price is $50", "the price of the product is 50 dollars"
+
+dict ["price", "$20"]
+dict ["$50", "today only 50 dollars"]
+
+# empty key
+dict ["", "an empty key"]
+
+# empty value
+dict ["goals",""]
+
+------------
+
+
+TEST 5a) Try with given example "$temp$ here comes the name $name$".   OK.
+
+$ kdr dict1.txt
+$temp$ here comes the name $name$
+temporary here comes the name John Doe
+$
+
+
+TEST 5b) Test filling of output string with keys $x$ ja $Y$.  -> error message  OK
+
+$ kdr dict1.txt
+And here are many short keys to fill output buffer. $x$ $Y$ 1 $x$ $Y$ 2 $x$ $Y$ 3 $x$ $Y$ 4 $x$ $Y$ 5 Some text.
+
+Output buffer exceeded (2)
+MAX OUTPUT BUFFER SIZE REACHED (127), ignored rest ($x$ $Y$ 2 $x$ $Y$ 3 $x$ $Y$ 4 $x$ $Y$ 5 Some text.
+)
+
+Partially successful.
+And here are many short keys to fill output buffer. this key has long definition ALSO THIS HAS LONG DEFINITION 1
+$
+
+
+TEST 5c) Long key, short value      OK
+
+$ kdr dict1.txt
+Text with $name_of_the_key_is_long$. And $Another long key$. How it went?
+Text with short. And value. How it went?
+$
+
+
+TEST 5d) Keys with upper and lower case letters are different    OK
+
+$ kdr dict1.txt
+This $house$ is not same as this another $House$.
+This parliament is not same as this another White House.
+$
+
+
+TEST 5e)  Dollars in a key        OK
+
+$ kdr dict1.txt
+Price was $$50$.
+Price was today only 50 dollars.
+$
+
+$ kdr dict1.txt
+How about this? $price is $50$
+How about this? the price of the product is 50 dollars
+$
+
+
+TEST 5f) Maybe problem with dollars: "ou$to" and "ou", also "3210" ja "3210$0123"?  works as expected  OK
+
+kdr dict1.txt
+$ou$ $ou$to$ works as expected.
+Sana 'ou' there was an dollar inside works as expected.
+$
+
+
+$ kdr dict1.txt
+But here keys are not separated $3210$ and $3210$0123$ but it was expected.
+But here keys are not separated countdown and countdown0123$ but it was expected.
+$
+
+In that 2nd one keys are mixed but that was expected because of $ inside a key
+and another key with the same start up to $ was defined earlier.
+
+
+TEST 5g) Empty key                         OK
+
+kdr dict1.txt
+Empty key $$ is expanded. More $$ and $$.
+Empty key an empty key is expanded. More an empty key and an empty key.
+$
+
+
+TEST 5h) Empty string, not even line feed, push CTRL-D in the beginning, prints nothing    OK
+
+$ kdr dict1.txt
+$ 
+
+
+TEST 6) Debug logs               OK
+        =============
+
+List the test of -d2 only. Others are mostly for debugging.
+-d2 lists key and value pairs.
+
+$ kdr -d2 dict1.txt
+ 0: '$temp$','temporary'
+ 1: '$name$','John Doe'
+ 2: '$house$','parliament'
+ 3: '$House$','White House'
+ 4: '$x$','this key has long definition'
+ 5: '$Y$','ALSO THIS HAS LONG DEFINITION'
+ 6: '$name_of_the_key_is_long$','short'
+ 7: '$Another long key$','value'
+ 8: '$dollar$','$'
+ 9: '$ou$to$','there was an dollar inside'
+10: '$ou$','Sana 'ou''
+11: '$3210$','countdown'
+12: '$3210$0123$','down and up'
+13: '$price is $50$','the price of the product is 50 dollars'
+14: '$price$','$20'
+15: '$$50$','today only 50 dollars'
+16: '$$','an empty key'
+17: '$goals$',''
+$price$
+Input : $price$
+Output: $20
+$
+
+
